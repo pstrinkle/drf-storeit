@@ -31,6 +31,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def partial_update(self, request, pk=None, **kwargs):
         return Response(status=status.HTTP_404_NOT_FOUND)
 
+    # XXX: Revisit if I need this.
     @detail_route(methods=['post'])
     def secondarylogin(self, request, *args, **kwargs):
         """

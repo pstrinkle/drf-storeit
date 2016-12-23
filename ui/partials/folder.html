@@ -1,0 +1,14 @@
+
+<div class="container">
+    <div class="page-header">
+        <h1>{{folder_name}} <small>Subtext for header</small></h1>
+    </div>
+
+    <div>
+        <button type="button" class="btn btn-link" ng-click="loadNewFolder($event)" style="text-decoration:none;"><i class="fa fa-plus" aria-hidden="true"></i> Create Folder</button>
+    </div>
+
+    <div>
+        <button class="btn btn-primary" ng-repeat="folder in folder.folders track by id">{{folder.name}}</button>
+    </div>
+</div>

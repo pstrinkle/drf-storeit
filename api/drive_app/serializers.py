@@ -50,6 +50,26 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('size', )
 
 
+class ImageSubSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Sub-view serializer.
+    """
+
+    class Meta:
+        model = apps.get_model('drive_app.Image')
+        fields = ('name', 'id')
+
+
+class FolderSubSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Sub-view serializer.
+    """
+
+    class Meta:
+        model = apps.get_model('drive_app.Folder')
+        fields = ('name', 'id')
+
+
 class FolderSerializer(serializers.HyperlinkedModelSerializer):
     """
     RW Folder serializer.
@@ -59,8 +79,8 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     # XXX We shouldn't return the full list, since we should respect the hierarchy.
-    images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    images = ImageSubSerializer(many=True, read_only=True)
+    folders = FolderSubSerializer(many=True, read_only=True)
 
     owner = serializers.PrimaryKeyRelatedField(
         queryset=apps.get_model('drive_app.DriveUser').objects.all(), required=False
@@ -102,8 +122,8 @@ class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     # XXX We shouldn't return the full list, since we should respect the hierarchy.
-    images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    #images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    #folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     # input
     password = serializers.CharField(
@@ -135,7 +155,7 @@ class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.DriveUser')
-        fields = ('email', 'password', 'first_name', 'last_name', 'root', 'images', 'folders', 'id')
+        fields = ('email', 'password', 'first_name', 'last_name', 'root', 'id')
         write_only_fields = ('password',)
 
 

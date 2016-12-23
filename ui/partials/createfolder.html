@@ -1,0 +1,38 @@
+
+<div class="modal-header">
+    <h3 class="modal-title" id="modal-title">Create Folder</h3>
+</div>
+
+<form name="folderform" ng-submit="createFolder()" class="form-horizontal">
+    <div class="modal-body" id="modal-body">
+        <div class="col-md-12">
+            <div class="form-group">
+                <input type="text" class="form-control"
+                       id="name"
+                       name="name"
+                       placeholder="New form name"
+                       ng-required="true"
+                       ng-trim="true"
+                       ng-model="name"
+                       ng-minlength="config.name.min_length"
+                       ng-maxlength="config.name.max_length"
+                       ng-pattern="config.name.pattern" />
+            </div>
+            <div class="col-sm-12 help-block" ng-show="folderform.folder.$error.minlength">
+                Name too short, minimum length <span ng-bind="config.name.min_length"></span>.
+            </div>
+            <div class="col-sm-12 help-block" ng-show="folderform.folder.$error.maxlength">
+                Name too long, maximum length <span ng-bind="config.name.max_length"></span>.
+            </div>
+            <div class="col-sm-12 help-block" ng-show="folderform.name.$error.pattern">
+                Invalid name, please keep it simple for now.
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button class="btn btn-danger" type="button" ng-click="cancel()">Cancel</button>
+        <button type="submit" class="btn btn-success">Save</button>
+    </div>
+</form>
+

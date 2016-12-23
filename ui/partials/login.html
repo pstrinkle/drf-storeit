@@ -1,0 +1,27 @@
+
+<div class="container">
+    <div class="modal-header">
+        <h3 class="modal-title" id="modal-title">Login</h3>
+    </div>
+
+    <div class="modal-body" id="modal-body">
+        <div class="col-md-12">
+                <div class="col-md-6">
+                <form name="loginform" ng-submit="tryLogin()" class="form-horizontal">
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" ng-model="username" class="form-control" name="email" id="email" placeholder="Email" autolowercase>
+                        <div class="col-sm-12 help-block" ng-show="loginform.email.$invalid">
+                            Invalid email address.
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" ng-model="password" class="form-control" id="password" placeholder="Password">
+                    </div>
+                    <button type="submit" class="btn btn-default">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
