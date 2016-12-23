@@ -29,6 +29,7 @@ class FolderViewSet(viewsets.ModelViewSet):
     API endpoint that lets a user manipulate their folders.
     """
 
+    metadata_class = FolderMetadata
     serializer_class = FolderSerializer
 
     def get_queryset(self):

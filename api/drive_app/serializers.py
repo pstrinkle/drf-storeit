@@ -46,7 +46,7 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Image')
-        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail')
+        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail', 'name')
         read_only_fields = ('size', )
 
 

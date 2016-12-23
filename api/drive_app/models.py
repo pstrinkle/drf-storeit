@@ -32,7 +32,7 @@ class Folder(models.Model):
 
     added = models.DateTimeField(auto_now_add=True)
 
-    owner = models.ForeignKey('DriveUser', related_name='images')
+    owner = models.ForeignKey('DriveUser', related_name='folders')
     folder = models.ForeignKey('Folder', related_name='folders')
 
     name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
@@ -52,6 +52,7 @@ class Image(models.Model):
     owner = models.ForeignKey('DriveUser', related_name='images')
     folder = models.ForeignKey('Folder', related_name='images')
 
+    name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
     size = models.IntegerField(default=0)
 
     # How we track stored images.
