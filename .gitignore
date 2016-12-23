@@ -1,6 +1,7 @@
 .idea/
 *.sqlite3
 bower_components/
+db/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

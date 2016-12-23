@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import sys
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -18,11 +19,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'q%zbq+-$n0(0u)jzpo=c@w58@%fs*_9h72g#2)xxfo*0x8u-r)'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 
 # Application definition
 
@@ -133,27 +129,57 @@ USE_TZ = True
 
 # STATIC_ROOT is only used for collectstatic's destination.
 STATIC_ROOT = '/static'
-
-
 STATIC_URL = '/static/'
 #STATICFILES_FINDERS = [
 #    'django.contrib.staticfiles.finders.FileSystemFinder',
 #    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #]
 
-
 # MEDIA_ROOT is defined by development or production.
 MEDIA_URL = '/media/'
+# MEDIA_ROOT is used for saving incoming media.
+#MEDIA_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'media')
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = 'q%zbq+-$n0(0u)jzpo=c@w58@%fs*_9h72g#2)xxfo*0x8u-r)'
+
+# SECURITY WARNING: don't run with debug turned on in production!
 
 DEBUG = True
 ALLOWED_HOSTS = []
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+if 'makemigrations' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        }
     }
-}
+elif 'test' in sys.argv:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': os.path.join(BASE_DIR, 'db/db.sqlite3'),
+        }
+    }
+else:
+    ALLOWED_HOSTS = ['*']
 
-# MEDIA_ROOT is used for saving incoming media.
-MEDIA_ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), 'media')
+    DATABASES = {
+        'default': {
+            # I've also seen django.db.backends.postgresql as the engine.
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': os.environ.get('DB_ENV_DB', 'postgres'),
+            'USER': os.environ.get('DB_ENV_POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.environ.get('DB_ENV_POSTGRES_PASSWORD', 'postgres'),
+            'HOST': os.environ.get('DB_PORT_5432_TCP_ADDR', 'db'),
+            'PORT': os.environ.get('DB_PORT_5432_TCP_PORT', 5432),
+        }
+    }
+
+    # MEDIA_ROOT is used for saving incoming media.
+    # for production use.
+    MEDIA_ROOT = '/media'
+
+
+

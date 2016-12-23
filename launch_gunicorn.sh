@@ -2,7 +2,7 @@
 
 # Sleep because it will start running this once db is up and running which doesn't yet signal that it's ready for
 # connections.
-sleep 10
+sleep 60
 
 # Apply database migrations
 python manage.py migrate --settings drive_app.settings
