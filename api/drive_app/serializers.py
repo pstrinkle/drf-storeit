@@ -78,6 +78,9 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
         # Make it you can only create folders into your own folders.
         validated_data['owner'] = self.context['request'].user.id
 
+        if 'folder' not in validated_data:
+            pass  # XXX: Point it at the root folder.
+
         folder = Folder.objects.create(**validated_data)
 
         return folder

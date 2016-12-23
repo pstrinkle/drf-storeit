@@ -1,8 +1,9 @@
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
-from rest_framework.decorators import detail_route
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.decorators import detail_route
+from rest_framework.response import Response
 
 from drive_app.serializers import DriveUserSerializer
 from drive_app.models import DriveUser
@@ -42,3 +43,6 @@ class UserViewSet(viewsets.ModelViewSet):
                 return HttpResponse(status=status.HTTP_403_FORBIDDEN)
         else:
             return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
+
+    def partial_update(self, request, pk=None, **kwargs):
+        return Response(status=status.HTTP_404_NOT_FOUND)
