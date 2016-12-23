@@ -14,8 +14,22 @@ class UserViewSet(viewsets.ModelViewSet):
     API endpoint that allows users to be viewed or edited.
     """
 
-    queryset = DriveUser.objects.all()
     serializer_class = DriveUserSerializer
+
+    def get_queryset(self):
+        """
+        Make it so an owner can only retrieve or list their own Folders.
+        """
+
+        if self.request.user.is_superuser:
+            qs = DriveUser.objects.all()
+        else:
+            qs = DriveUser.objects.filter(id=self.request.user.id)
+
+        return qs
+
+    def partial_update(self, request, pk=None, **kwargs):
+        return Response(status=status.HTTP_404_NOT_FOUND)
 
     @detail_route(methods=['post'])
     def secondarylogin(self, request, *args, **kwargs):
@@ -44,5 +58,3 @@ class UserViewSet(viewsets.ModelViewSet):
         else:
             return HttpResponse(status=status.HTTP_401_UNAUTHORIZED)
 
-    def partial_update(self, request, pk=None, **kwargs):
-        return Response(status=status.HTTP_404_NOT_FOUND)

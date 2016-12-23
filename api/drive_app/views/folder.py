@@ -35,13 +35,10 @@ class FolderViewSet(viewsets.ModelViewSet):
         Make it so an owner can only retrieve or list their own Folders.
         """
 
-        qs = Folder.objects.all()
-
         if self.request.user.is_superuser:
-            import sys
-            sys.stderr.write('request from superuser: %d\n' % self.request.user.id)
+            qs = Folder.objects.all()
         else:
-            qs.filter(owner=self.request.user.id)
+            qs = Folder.objects.filter(owner=self.request.user.id)
 
         return qs
 

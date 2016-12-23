@@ -41,8 +41,5 @@ class BasicTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         del user['password']
         self.verify_built(user, response.data)
-        import sys
-        from json import dumps
-        sys.stderr.write('response.data: %s\n' % dumps(response.data, indent=2))
         return response.data['id']
 

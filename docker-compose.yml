@@ -15,7 +15,7 @@ ui:
     container_name: ui
     image: nginx
     volumes:
-        - ./ui:/static
+        - ./ui:/www
         - ./media:/media
         - ./conf/nginx:/etc/nginx/conf.d
         - ./logs:/var/log/nginx

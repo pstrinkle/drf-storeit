@@ -1,4 +1,5 @@
 from rest_framework import status
+from rest_framework.test import APIClient
 from drive_app.models import DriveUser
 from drive_app.tests.base import BasicTest
 
@@ -29,10 +30,9 @@ class FolderListTests(BasicTest):
         A user can only list their own folders.
         """
 
-        import sys
-        sys.stderr.write('list only my folders: %s\n' % str(self.one_id))
         self.login(username='one@snow.com')
         response = self.client.get('/api/v1/folder', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(1, len(response.data))
         self.logout()
+
