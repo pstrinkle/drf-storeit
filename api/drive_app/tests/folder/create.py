@@ -1,16 +1,16 @@
 from rest_framework import status
-from drive_app.models.models import DriveUser
-from drive_app.tests.catotest import BasicTest
+from drive_app.models import DriveUser
+from drive_app.tests.base import BasicTest
 
 
-class MessageCreateTests(BasicTest):
+class FolderCreateTests(BasicTest):
 
     def setUp(self):
-        self.superuser = DriveUser.objects.create_superuser('admin', 'john@snow.com', 'password123')
-        self.login(username='admin')
+        self.superuser = DriveUser.objects.create_superuser('john@snow.com', 'password123')
 
-
-
+        self.login(username='john@snow.com')
+        self.one_id = self.create_user('one@snow.com')
+        self.two_id = self.create_user('two@snow.com')
         self.logout()
 
     def test_can_create_root_level_folder(self):
@@ -18,9 +18,26 @@ class MessageCreateTests(BasicTest):
         Folder without a parent folder.
         """
 
-        self.login(username='user_a')
-        response = self.client.post('/api/v1/folder', {}, format='json')
+        folder = {
+            'name': 'new',
+        }
+
+        self.login(username='one@snow.com')
+        response = self.client.post('/api/v1/folder', folder, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.verify_built({}, response.data)
+
+        folder['owner'] = self.one_id
+
+        self.verify_built(folder, response.data)
         self.logout()
+
+    def test_can_create_subordinate_folder(self):
+        """
+        Verify you can create a folder under a folder under the root folder.
+        """
+
+    def test_cant_create_folder_under_another_user(self):
+        """
+        Verify if owner is specified, it's ignord.
+        """
 

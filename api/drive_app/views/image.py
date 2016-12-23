@@ -38,7 +38,7 @@ class ImageViewSet(viewsets.ModelViewSet):
         """
 
         qs = Image.objects.all()
-        qs.filter(owner=self.request.user)
+        qs.filter(owner=self.request.user.id)
         return qs
 
     def partial_update(self, request, pk=None, **kwargs):

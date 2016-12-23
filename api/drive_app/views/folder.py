@@ -36,8 +36,29 @@ class FolderViewSet(viewsets.ModelViewSet):
         """
 
         qs = Folder.objects.all()
-        qs.filter(owner=self.request.user)
+
+        if self.request.user.is_superuser:
+            import sys
+            sys.stderr.write('request from superuser: %d\n' % self.request.user.id)
+        else:
+            qs.filter(owner=self.request.user.id)
+
         return qs
 
     def partial_update(self, request, pk=None, **kwargs):
         return Response(status=status.HTTP_404_NOT_FOUND)
+
+    def create(self, request, **kwargs):
+        """
+        Create a Folder
+        """
+
+        update_these = request.data.copy()
+        update_these['owner'] = request.user.id
+
+        serializer = FolderSerializer(data=update_these, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

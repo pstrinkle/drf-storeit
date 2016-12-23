@@ -18,9 +18,6 @@ from django.conf.urls import url, include
 from rest_framework import routers
 from rest_framework_nested import routers as nrouters
 
-from django.conf import settings
-from django.conf.urls.static import static
-
 from drive_app.views import folder
 from drive_app.views import image
 from drive_app.views import user
@@ -40,5 +37,3 @@ urlpatterns = [
     url(r'^api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     url(r'auth/', include('knox.urls')),
 ]
-
-urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

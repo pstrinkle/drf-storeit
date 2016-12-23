@@ -1,12 +1,11 @@
-
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from drive_app.models.models import DriveUser
-from json import dumps
-import os
+from drive_app.models import DriveUser
 from random import choice
+from json import dumps
 import string
+import os
 
 
 class BasicTest(APITestCase):
@@ -25,4 +24,25 @@ class BasicTest(APITestCase):
     def verify_built(self, expected, data):
         for key in expected:
             self.assertEqual(data[key], expected[key])
+
+    def create_user(self, email):
+        """
+        Create a basic user for testing.
+        """
+
+        user = {
+            'email':      email,
+            'first_name': 'first',
+            'last_name':  'last',
+            'password':   self.PW,
+        }
+
+        response = self.client.post('/api/v1/user', user, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        del user['password']
+        self.verify_built(user, response.data)
+        import sys
+        from json import dumps
+        sys.stderr.write('response.data: %s\n' % dumps(response.data, indent=2))
+        return response.data['id']
 

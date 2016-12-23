@@ -15,7 +15,7 @@ ui:
     container_name: ui
     image: nginx
     volumes:
-        - ./static:/static
+        - ./ui:/static
         - ./media:/media
         - ./conf/nginx:/etc/nginx/conf.d
         - ./logs:/var/log/nginx
@@ -30,7 +30,6 @@ api:
     # build with ./Dockerfile
     build: .
     volumes:
-        - ./static:/static
         - ./media:/media
         - ./api:/usr/src/app
     links:

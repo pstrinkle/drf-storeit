@@ -15,7 +15,7 @@ from sanitizer.models import SanitizedCharField, SanitizedTextField
 
 #saved_file.connect(generate_aliases_global)
 
-alphanumeric = RegexValidator(r'^[0-9a-zA-Z_]*$', 'Only alphanumeric characters are allowed.')
+alphanumeric = RegexValidator(r'^[\.0-9a-zA-Z_]*$', 'Only alphanumeric characters are allowed.')
 minlength = MinLengthValidator(3, message='Field value must be at least 3 characters long')
 
 
@@ -27,12 +27,12 @@ class Folder(models.Model):
     added = models.DateTimeField(auto_now_add=True)
 
     owner = models.ForeignKey('DriveUser', related_name='folders')
-    folder = models.ForeignKey('Folder', related_name='folders')
+    folder = models.ForeignKey('Folder', blank=True, null=True, related_name='folders')
 
     name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
 
     class Meta:
-        # Make sure you can't add the same Target for a customer twice.
+        # imperfect because then you can't have subordinate directories with the same name...
         unique_together = ('owner', 'name')
 
 
@@ -43,7 +43,7 @@ class Image(models.Model):
 
     added = models.DateTimeField(auto_now_add=True)
 
-    owner = models.ForeignKey('DriveUser', related_name='images')
+    owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='images')
     folder = models.ForeignKey('Folder', related_name='images')
 
     name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
@@ -52,7 +52,7 @@ class Image(models.Model):
     # How we track stored images.
     file = models.ImageField()
     thumbnail = fields.ThumbnailerImageField(upload_to='thumbnails',
-                                             resize_source=dict(size=(160, 160), sharpen=True),
+                                             resize_source=dict(size=(120, 120), sharpen=True),
                                              blank=True)
 
 
@@ -64,12 +64,14 @@ class DriveUserManager(BaseUserManager):
         Create a root directory for the user.
         """
 
+        # This name value violates the validators.
         params = {
             'owner': user,
-            'name': '/'
+            'name': '_'
         }
 
-        Folder.objects.create(**params)
+        root = Folder.objects.create(**params)
+        root.save(using=self._db)
 
     def _create_user(self, email, password, is_superuser, **extra_fields):
         """
@@ -96,8 +98,7 @@ class DriveUserManager(BaseUserManager):
         return self._create_user(email, password, False, **extra_fields)
 
     def create_superuser(self, email, password, **extra_fields):
-        user = self._create_user(email, password, True, **extra_fields)
-        return user
+        return self._create_user(email, password, True, **extra_fields)
 
 
 class DriveUser(AbstractBaseUser, PermissionsMixin):

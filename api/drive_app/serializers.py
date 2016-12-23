@@ -38,7 +38,7 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
         validated_data['size'] = validated_data['file'].size
         validated_data['thumbnail'] = validated_data['file']
         # Make it you can only create files into your own folders.
-        validated_data['owner'] = self.context['request'].user.id
+        validated_data['owner'] = self.context['request'].user
 
         img = Image.objects.create(**validated_data)
 
@@ -55,7 +55,12 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
     RW Folder serializer.
 
     If folder is blank, it's basically treated as a root level folder.
+    Owner should be blank, we fill it in with the request maker's id.
     """
+
+    # XXX We shouldn't return the full list, since we should respect the hierarchy.
+    images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     owner = serializers.PrimaryKeyRelatedField(
         queryset=apps.get_model('drive_app.DriveUser').objects.all(), required=False
@@ -76,10 +81,11 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
 
     def create(self, validated_data):
         # Make it you can only create folders into your own folders.
-        validated_data['owner'] = self.context['request'].user.id
+        validated_data['owner'] = self.context['request'].user
 
         if 'folder' not in validated_data:
-            pass  # XXX: Point it at the root folder.
+            root = Folder.objects.get(name='_', owner=self.context['request'].user.id)
+            validated_data['folder'] = root
 
         folder = Folder.objects.create(**validated_data)
 
@@ -87,13 +93,17 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Folder')
-        fields = ('added', 'owner', 'folder', 'name', 'id')
+        fields = ('added', 'owner', 'folder', 'name', 'images', 'folders', 'id')
 
 
 class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
     """
     RW ImageUser serializer.
     """
+
+    # XXX We shouldn't return the full list, since we should respect the hierarchy.
+    images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     # input
     password = serializers.CharField(
@@ -104,20 +114,28 @@ class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
         }
     )
 
+    root = serializers.SerializerMethodField(read_only=True)
+
+    def get_root(self, obj):
+        return Folder.objects.get(owner=obj.id, name='_').id
+
     def create(self, validated_data):
         """
         Create the user.
         """
 
-        user = DriveUser.objects.create(**validated_data)
-        user.set_password(validated_data['password'])
-        user.save()
+        email = validated_data['email']
+        password = validated_data['password']
+        del validated_data['email']
+        del validated_data['password']
+
+        user = DriveUser.objects.create_user(email=email, password=password, **validated_data)
 
         return user
 
     class Meta:
         model = apps.get_model('drive_app.DriveUser')
-        fields = ('added', 'email', 'username', 'password', 'first_name', 'last_name', 'id')
+        fields = ('email', 'password', 'first_name', 'last_name', 'root', 'images', 'folders', 'id')
         write_only_fields = ('password',)
 
 
@@ -126,7 +144,12 @@ class LoginUserSerializer(serializers.HyperlinkedModelSerializer):
     Login output serializer.
     """
 
+    root = serializers.SerializerMethodField(read_only=True)
+
+    def get_root(self, obj):
+        return Folder.objects.get(owner=obj.id, name='_').id
+
     class Meta:
         model = apps.get_model('drive_app.DriveUser')
-        fields = ('email', 'username', 'first_name', 'last_name', 'id')
+        fields = ('email', 'first_name', 'last_name', 'root', 'id')
 
