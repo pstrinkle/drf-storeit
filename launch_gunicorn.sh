@@ -5,13 +5,9 @@
 sleep 10
 
 # Apply database migrations
-python manage.py migrate --settings image_app.settings.prod
+python manage.py migrate --settings drive_app.settings
 # harmless if this runs every time.
-echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('fake@example.com', 'password123', first_name='admin', last_name='name')" | python manage.py shell --settings image_app.settings.prod
-
-# If I just kept the static files separate for development then I couldn't run the server via manage.py;
-# I'd always need to run nginx
-python manage.py collectstatic --noinput  # Collect static files
+echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('fake@example.com', 'password123', first_name='admin', last_name='name')" | python manage.py shell --settings drive_app.settings
 
 # Prepare log files and start outputting logs to stdout
 touch /tmp/gunicorn.log
