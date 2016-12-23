@@ -1,0 +1,11 @@
+django==1.10.2
+django-filter==0.15.3
+django-html_sanitizer==0.1.5
+djangorestframework==3.5.1
+drf-nested-routers==0.11.1
+django-rest-knox==2.2.0
+Pillow==3.4.2
+cryptography==1.5.2
+easy-thumbnails==2.3
+gunicorn==19.6.0
+psycopg2==2.6.2

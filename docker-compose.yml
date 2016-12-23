@@ -1,0 +1,41 @@
+
+db:
+    hostname: db
+    container_name: db
+    image: postgres
+    environment:
+        - POSTGRES_USER=postgres
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_DB=postgres
+    volumes:
+        - ./db/:/var/lib/postgresql/data/
+
+ui:
+    hostname: ui
+    container_name: ui
+    image: nginx
+    volumes:
+        - ./static:/static
+        - ./media:/media
+        - ./conf/nginx:/etc/nginx/conf.d
+        - ./logs:/var/log/nginx
+    ports:
+        - "80:80"
+    links:
+        - api
+
+api:
+    hostname: api
+    container_name: api
+    # build with ./Dockerfile
+    build: .
+    volumes:
+        - ./static:/static
+        - ./media:/media
+        - ./api:/usr/src/app
+    links:
+        - db
+# ports lets your host access it (versus strictly other docker containers)
+#    ports:
+#        - "8000:8000"
+
