@@ -22,7 +22,7 @@
         </button>
     </div>
 
-    <div>
+    <div ng-show="folder.folders.length > 0">
         <h4>Folders</h4>
         <button class="btn btn-primary"
                 style="margin-left: 10px;"
@@ -30,6 +30,8 @@
                 ng-click="loadFolder(folder.id)">
             <i class="fa fa-folder-o" aria-hidden="true"></i> {{folder.name}}
         </button>
+    </div>
+    <div ng-show="folder.images.length > 0">
         <h4>Images</h4>
         <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left: 10px;">
             <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail">
