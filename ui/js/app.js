@@ -2,7 +2,10 @@
     'use strict';
 
     var StoreApp = angular.module('storeit_app', [
+        'angularMoment',
         'ngAria',
+        'ngCookies',
+        'ngFilesizeFilter',
         'ngFileUpload',
         'ngResource',
         'ngSanitize',
@@ -202,8 +205,8 @@
     }]);
 
     StoreApp.controller('folderCtrl',
-                        ['$scope', '$state', '$uibModal', 'credentialsService', 'Folders', 'Images', 'Upload',
-                         function($scope, $state, $uibModal, credentialsService, Folders, Images, Upload) {
+                        ['$scope', '$state', '$uibModal', '$cookies', 'credentialsService', 'Folders', 'Images', 'Upload',
+                         function($scope, $state, $uibModal, $cookies, credentialsService, Folders, Images, Upload) {
 
         $scope.folder_name = '';
         $scope.folder = {};
@@ -221,6 +224,13 @@
         }
 
         function initialize() {
+            var savedlayout = $cookies.get('layout');
+            console.log('layout cookie value: ' + savedlayout);
+            if (savedlayout) {
+                /* just in case they've changed the value to be funny. */
+                $scope.layout = (savedlayout === 'grid') ? 'grid' : 'table';
+            }
+
             Folders.get({folderId: $state.params.folderId}).$promise
                 .then(function(result) {
                     console.log('result: ' + JSON.stringify(result, null, 2));
@@ -257,7 +267,11 @@
             modal.result.then(function success(result) {
                 console.log('result: ' + JSON.stringify(result, null, 2));
 
-                $scope.folder.folders.push({name: result.name, id: result.id});
+                $scope.folder.folders.push({
+                    name: result.name,
+                    id: result.id,
+                    updated: result.updated
+                });
                 // new folder created.
             }, function dismissed(result) {
                 console.log('result: ' + result);
@@ -292,7 +306,9 @@
                         $scope.folder.images.push({
                             name: resp.data.name,
                             id: resp.data.id,
-                            thumbnail: resp.data.thumbnail
+                            thumbnail: resp.data.thumbnail,
+                            updated: resp.data.updated,
+                            size: resp.data.size,
                         });
                     }, function(resp) {
                         console.log('Error status: ' + resp.status);
@@ -304,6 +320,7 @@
         $scope.changeLayout = function() {
             /* simple toggle method for now. */
             $scope.layout = ($scope.layout === 'grid') ? 'table' : 'grid';
+            $cookies.put('layout', $scope.layout);
         };
 
         $scope.condensed = function() {
@@ -317,6 +334,7 @@
                     $scope.folder.condensed.push({
                         name: $scope.folder.folders[i].name,
                         id: $scope.folder.folders[i].id,
+                        updated: $scope.folder.folders[i].updated,
                         type: 'folder',
                     });
                 }
@@ -325,6 +343,8 @@
                     $scope.folder.condensed.push({
                         name: $scope.folder.images[i].name,
                         id: $scope.folder.images[i].id,
+                        updated: $scope.folder.images[i].updated,
+                        size: $scope.folder.images[i].size,
                         type: 'image',
                     });
                 }

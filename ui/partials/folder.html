@@ -68,13 +68,19 @@
             <tbody>
                 <tr ng-repeat="file in condensed()">
                     <td ng-if="file.type === 'folder'" ng-click="loadFolder(file.id)">
-                        <i class="fa {{(file.type === 'folder') ? 'fa-folder' : 'fa-file-image-o'}}" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                        <i class="fa fa-folder" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>
                     <td ng-if="file.type === 'image'">
-                        <i class="fa {{(file.type === 'folder') ? 'fa-folder' : 'fa-file-image-o'}}" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                        <i class="fa fa-file-image-o" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>
-                    <td>not yet serialized</td>
-                    <td ng-bind="(file.type === 'image') ? file.size: ''"></td>
+                    <td>
+                        <span uib-tooltip="{{file.updated | amUtc | amLocal | amDateFormat:'lll'}}"
+                              am-time-ago="file.updated"></span>
+                    </td>
+                    <td ng-if="file.type === 'folder'"></td>
+                    <td ng-if="file.type === 'image'">
+                        <span ng-bind="file.size | filesize"></span>
+                    </td>
                 </tr>
             </tbody>
         </table>
