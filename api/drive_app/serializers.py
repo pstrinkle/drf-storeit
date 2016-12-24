@@ -46,7 +46,7 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Image')
-        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail', 'name')
+        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail', 'name', 'updated')
         read_only_fields = ('size', )
 
 
@@ -67,7 +67,7 @@ class ImageSubSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Image')
-        fields = ('name', 'id', 'thumbnail')
+        fields = ('name', 'id', 'thumbnail', 'size', 'updated')
 
 
 class FolderSubSerializer(serializers.HyperlinkedModelSerializer):
@@ -77,7 +77,7 @@ class FolderSubSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Folder')
-        fields = ('name', 'id')
+        fields = ('name', 'id', 'updated')
 
 
 class FolderSerializer(serializers.HyperlinkedModelSerializer):
@@ -88,7 +88,6 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
     Owner should be blank, we fill it in with the request maker's id.
     """
 
-    # XXX We shouldn't return the full list, since we should respect the hierarchy.
     images = ImageSubSerializer(many=True, read_only=True)
     folders = FolderSubSerializer(many=True, read_only=True)
 
@@ -123,17 +122,13 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Folder')
-        fields = ('added', 'owner', 'folder', 'name', 'images', 'folders', 'id')
+        fields = ('added', 'owner', 'folder', 'name', 'images', 'folders', 'id', 'updated')
 
 
 class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
     """
     RW ImageUser serializer.
     """
-
-    # XXX We shouldn't return the full list, since we should respect the hierarchy.
-    #images = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-    #folders = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
 
     # input
     password = serializers.CharField(
@@ -148,6 +143,11 @@ class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
 
     def get_root(self, obj):
         return Folder.objects.get(owner=obj.id, name='_').id
+
+    trash = serializers.SerializerMethodField(read_only=True)
+
+    def get_trash(self, obj):
+        return Folder.objects.get(owner=obj.id, name='.trash').id
 
     def create(self, validated_data):
         """
@@ -165,7 +165,7 @@ class DriveUserSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.DriveUser')
-        fields = ('email', 'password', 'first_name', 'last_name', 'root', 'id')
+        fields = ('email', 'password', 'first_name', 'last_name', 'root', 'trash', 'id')
         write_only_fields = ('password',)
 
 
@@ -179,7 +179,12 @@ class LoginUserSerializer(serializers.HyperlinkedModelSerializer):
     def get_root(self, obj):
         return Folder.objects.get(owner=obj.id, name='_').id
 
+    trash = serializers.SerializerMethodField(read_only=True)
+
+    def get_trash(self, obj):
+        return Folder.objects.get(owner=obj.id, name='.trash').id
+
     class Meta:
         model = apps.get_model('drive_app.DriveUser')
-        fields = ('email', 'first_name', 'last_name', 'root', 'id')
+        fields = ('email', 'first_name', 'last_name', 'root', 'trash', 'id')
 

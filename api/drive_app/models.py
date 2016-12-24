@@ -25,6 +25,7 @@ class Folder(models.Model):
     """
 
     added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     owner = models.ForeignKey('DriveUser', related_name='folders')
     folder = models.ForeignKey('Folder', blank=True, null=True, related_name='folders')
@@ -42,6 +43,7 @@ class Image(models.Model):
     """
 
     added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
 
     owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='images')
     folder = models.ForeignKey('Folder', related_name='images')
@@ -69,6 +71,11 @@ class DriveUserManager(BaseUserManager):
             'owner': user,
             'name': '_'
         }
+
+        root = Folder.objects.create(**params)
+        root.save(using=self._db)
+
+        params['name'] = '.trash'
 
         root = Folder.objects.create(**params)
         root.save(using=self._db)

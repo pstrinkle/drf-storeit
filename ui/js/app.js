@@ -208,6 +208,7 @@
         $scope.folder_name = '';
         $scope.folder = {};
         $scope.hasParent = false;
+        $scope.layout = 'grid';
 
         if ($state.params.folderId) {
             /* good. */
@@ -225,6 +226,7 @@
                     console.log('result: ' + JSON.stringify(result, null, 2));
                     $scope.folder_name = result.name;
                     angular.copy(result, $scope.folder);
+                    $scope.folder.condensed = [];
 
                     if ($scope.folder.folder) {
                         $scope.hasParent = true;
@@ -233,6 +235,7 @@
         }
 
         initialize();
+        console.log('layout: ' + $scope.layout);
 
         $scope.loadNewFolder = function(event) {
             var modal = $uibModal.open({
@@ -296,6 +299,41 @@
                     });
                 }
             }
+        };
+
+        $scope.changeLayout = function() {
+            /* simple toggle method for now. */
+            $scope.layout = ($scope.layout === 'grid') ? 'table' : 'grid';
+        };
+
+        $scope.condensed = function() {
+            if ($scope.folder.condensed) {
+                if ($scope.folder.condensed.length === $scope.folder.folders.length + $scope.folder.images.length) {
+                    return $scope.folder.condensed;
+                }
+
+                $scope.folder.condensed.length = 0;
+                for (var i = 0; i < $scope.folder.folders.length; i++) {
+                    $scope.folder.condensed.push({
+                        name: $scope.folder.folders[i].name,
+                        id: $scope.folder.folders[i].id,
+                        type: 'folder',
+                    });
+                }
+
+                for (var i = 0; i < $scope.folder.images.length; i++) {
+                    $scope.folder.condensed.push({
+                        name: $scope.folder.images[i].name,
+                        id: $scope.folder.images[i].id,
+                        type: 'image',
+                    });
+                }
+
+                console.log('condensed size: ' + $scope.folder.condensed.length);
+                return $scope.folder.condensed;
+            }
+
+            //angular.extend($scope.actions.data, data);
         };
     }]);
 

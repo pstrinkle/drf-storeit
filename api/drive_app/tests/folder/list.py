@@ -22,7 +22,7 @@ class FolderListTests(BasicTest):
         self.login(username='john@snow.com')
         response = self.client.get('/api/v1/folder', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(3, len(response.data))
+        self.assertEqual(6, len(response.data))
         self.logout()
 
     def test_can_list_only_my_folders(self):
@@ -33,6 +33,6 @@ class FolderListTests(BasicTest):
         self.login(username='one@snow.com')
         response = self.client.get('/api/v1/folder', format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(1, len(response.data))
+        self.assertEqual(2, len(response.data))  # root and trash.
         self.logout()
 

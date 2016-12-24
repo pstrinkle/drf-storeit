@@ -20,22 +20,63 @@
                 style="text-decoration:none;">
             <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload Image(s)
         </button>
-    </div>
 
-    <div ng-show="folder.folders.length > 0">
-        <h4>Folders</h4>
-        <button class="btn btn-primary"
-                style="margin-left: 10px;"
-                ng-repeat="folder in folder.folders track by folder.id"
-                ng-click="loadFolder(folder.id)">
-            <i class="fa fa-folder-o" aria-hidden="true"></i> {{folder.name}}
+        <button type="button"
+                class="btn btn-link"
+                ng-show="layout === 'table'"
+                ng-click="changeLayout()">
+            <i class="fa fa-th-large" aria-hidden="true"></i>
+        </button>
+
+        <button type="button"
+                class="btn btn-link"
+                ng-show="layout === 'grid'"
+                ng-click="changeLayout()">
+            <i class="fa fa-th-list" aria-hidden="true"></i>
         </button>
     </div>
-    <div ng-show="folder.images.length > 0">
-        <h4>Images</h4>
-        <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left: 10px;">
-            <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail">
-        </div>
 
+    <div ng-show="layout === 'grid'">
+        <div ng-show="folder.folders.length > 0">
+            <h4>Folders</h4>
+            <button class="btn btn-primary"
+                    style="margin-left: 10px;"
+                    ng-repeat="folder in folder.folders track by folder.id"
+                    ng-click="loadFolder(folder.id)">
+                <i class="fa fa-folder-o" aria-hidden="true"></i> {{folder.name}}
+            </button>
+        </div>
+        <div ng-show="folder.images.length > 0">
+            <h4>Images</h4>
+            <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left:10px;">
+                <p class="text-center">
+                    <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail"><br />
+                    <span ng-bind="image.name"></span>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div ng-show="layout === 'table'">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Updated</th><!-- a folder isn't updated when things are added to it (yet) -->
+                    <th>Size</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr ng-repeat="file in condensed()">
+                    <td ng-if="file.type === 'folder'" ng-click="loadFolder(file.id)">
+                        <i class="fa {{(file.type === 'folder') ? 'fa-folder' : 'fa-file-image-o'}}" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                    </td>
+                    <td ng-if="file.type === 'image'">
+                        <i class="fa {{(file.type === 'folder') ? 'fa-folder' : 'fa-file-image-o'}}" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                    </td>
+                    <td>not yet serialized</td>
+                    <td ng-bind="(file.type === 'image') ? file.size: ''"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 </div>
