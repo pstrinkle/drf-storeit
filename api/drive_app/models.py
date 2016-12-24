@@ -85,7 +85,7 @@ class DriveUserManager(BaseUserManager):
         Creates and saves a User with the given email and password.
         """
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).lower()
 
         # for the admin view.
         if is_superuser:
