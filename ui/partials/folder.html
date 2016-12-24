@@ -36,7 +36,7 @@
         </button>
     </div>
 
-    <div ng-show="layout === 'grid'">
+    <div ng-if="layout === 'grid'">
         <div ng-show="folder.folders.length > 0">
             <h4>Folders</h4>
             <button class="btn btn-primary"
@@ -56,7 +56,7 @@
             </div>
         </div>
     </div>
-    <div ng-show="layout === 'table'">
+    <div ng-if="layout === 'table'">
         <table class="table table-hover">
             <thead>
                 <tr>
