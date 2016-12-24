@@ -55,9 +55,19 @@ class ImageSubSerializer(serializers.HyperlinkedModelSerializer):
     Sub-view serializer.
     """
 
+    thumbnail = serializers.SerializerMethodField(read_only=True)
+
+    def get_thumbnail(self, obj):
+        """
+        I wrote this because it (by default) returns the full path, and with nginx serving the media and static, it
+        is unhappy.  Also, this working when running directly via manage.py  So, win-win.
+        """
+
+        return obj.thumbnail.url
+
     class Meta:
         model = apps.get_model('drive_app.Image')
-        fields = ('name', 'id')
+        fields = ('name', 'id', 'thumbnail')
 
 
 class FolderSubSerializer(serializers.HyperlinkedModelSerializer):

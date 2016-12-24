@@ -100,7 +100,7 @@
         };
     });
 
-    StoreApp.config(['$stateProvider', '$urlRouterProvider', function($stateProvider, $urlRouterProvider) {
+    StoreApp.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function($stateProvider, $urlRouterProvider, $httpProvider) {
 
         $urlRouterProvider.otherwise('/');
 
@@ -120,6 +120,29 @@
             templateUrl: 'partials/folder.html',
             controller: 'folderCtrl',
         });
+
+        /* XXX: Deal with this later.
+        //http://stackoverflow.com/questions/23720003/angularjs-handling-401s-for-entire-app
+        $httpProvider.interceptors.push(function($q) {
+            return {
+                'responseError': function(rejection) {
+                    var defer = $q.defer();
+
+                    if (rejection.status === 401) {
+                        if (rejection.config.url === '/auth/login/') {
+                            // you've gotten a 401 on the auth check.
+                        } else {
+                            console.dir(rejection);
+                            $location.url('/login');
+                        }
+                    }
+
+                    defer.reject(rejection);
+                    return defer.promise;
+                }
+            };
+        });
+        */
     }]);
 
     /* App.run, lets you initialize global stuff. */
@@ -179,17 +202,17 @@
     }]);
 
     StoreApp.controller('folderCtrl',
-                        ['$scope', '$state', '$uibModal', 'credentialsService', 'Folders', 'Images',
-                         function($scope, $state, $uibModal, credentialsService, Folders, Images) {
+                        ['$scope', '$state', '$uibModal', 'credentialsService', 'Folders', 'Images', 'Upload',
+                         function($scope, $state, $uibModal, credentialsService, Folders, Images, Upload) {
 
         $scope.folder_name = '';
         $scope.folder = {};
+        $scope.hasParent = false;
 
         if ($state.params.folderId) {
             /* good. */
             console.log('folderId: ' + $state.params.folderId);
         } else {
-            console.log('redirecting to root dir.');
             /* no folder specified; send them to their root. */
             var user = credentialsService.getUser();
             $state.go('folder', {folderId: user.root});
@@ -202,6 +225,10 @@
                     console.log('result: ' + JSON.stringify(result, null, 2));
                     $scope.folder_name = result.name;
                     angular.copy(result, $scope.folder);
+
+                    if ($scope.folder.folder) {
+                        $scope.hasParent = true;
+                    }
                 });
         }
 
@@ -235,6 +262,41 @@
                 // new folder canceled
             });
         };
+
+        $scope.loadFolder = function(folderId) {
+            $state.go('folder', {folderId: folderId});
+        };
+
+        $scope.parent = function() {
+            $state.go('folder', {folderId: $scope.folder.folder});
+        };
+
+        $scope.uploadFiles = function(files) {
+            $('#imageupload').blur();
+
+            if (files && files.length) {
+                for (var i = 0; i < files.length; i++) {
+                    var f = files[i];
+
+                    Upload.upload({
+                        url: '/api/v1/image',
+                        data: {
+                            file: f,
+                            name: f.name,
+                            folder: $scope.folder.id,
+                        }
+                    }).then(function(resp) {
+                        $scope.folder.images.push({
+                            name: resp.data.name,
+                            id: resp.data.id,
+                            thumbnail: resp.data.thumbnail
+                        });
+                    }, function(resp) {
+                        console.log('Error status: ' + resp.status);
+                    });
+                }
+            }
+        };
     }]);
 
     StoreApp.controller('createFolderCtrl', ['$scope', '$uibModalInstance', 'Folders', 'parentFolder',
@@ -253,8 +315,7 @@
         initialize();
 
         $scope.createFolder = function() {
-
-            console.log('trying to create: ' + $scope.name);
+            /* Try to create a new folder. */
             var newFolder = {
                 folder: parentFolder,
                 name: $scope.name,
