@@ -1,7 +1,10 @@
 
 
 
-.PHONY: launch
+.PHONY: prep launch
+
+prep:
+	bower install
 
 launch:
 	docker-compose up

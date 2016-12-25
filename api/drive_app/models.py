@@ -37,6 +37,28 @@ class Folder(models.Model):
         unique_together = ('owner', 'name')
 
 
+def user_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return 'user_{0}/{1}'.format(instance.owner.id, filename)
+
+
+class MiscFile(models.Model):
+    """
+    How we store the files.
+    """
+
+    added = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='files')
+    folder = models.ForeignKey('Folder', related_name='files')
+
+    name = SanitizedCharField(max_length=256, validators=[minlength])
+    size = models.IntegerField(default=0)
+
+    file = models.FileField(upload_to=user_directory_path)
+
+
 class Image(models.Model):
     """
     How we store the image.
@@ -48,7 +70,7 @@ class Image(models.Model):
     owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='images')
     folder = models.ForeignKey('Folder', related_name='images')
 
-    name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
+    name = SanitizedCharField(max_length=256, validators=[minlength])
     size = models.IntegerField(default=0)
 
     # How we track stored images.
