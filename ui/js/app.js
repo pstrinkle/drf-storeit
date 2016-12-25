@@ -234,6 +234,7 @@
         $scope.hasParent = false;
         $scope.layout = 'grid';
         $scope.selected = {};
+        /* interestingly, I can access this from the UI without it being attachd to the $scope... */
         var user = credentialsService.getUser();
 
         if ($state.params.folderId) {
@@ -336,12 +337,47 @@
             });
         };
 
-        $scope.selectItem = function(event, item) {
-            var mashup = item.type + ',' + item.id;
+        $scope.deselectAll = function(event) {
+            event.target.blur();
+            var items = Object.keys($scope.selected);
+            for (var i = 0; i < items.length; i++) {
+                delete $scope.selected[items[i]];
+            }
+            console.log('deselected all');
+        };
+
+        $scope.selectGrid = function(event, item, type) {
+            event.stopPropagation();
+            event.preventDefault();
+
+            // stopping this propogation doesn't work...
+            var mashup = type + ',' + item.id;
+            var nitem = {
+                name: item.name,
+                type: type,
+                id: item.id,
+            };
+
+            console.log('mashup: ' + JSON.stringify(mashup, null, 2));
+
             if ($scope.selected[mashup]) {
                 delete $scope.selected[mashup];
             } else {
-                $scope.selected[mashup] = item;
+                $scope.selected[mashup] = nitem;
+            }
+        };
+
+        $scope.selectItem = function(event, item) {
+            var mashup = item.type + ',' + item.id;
+            var nitem = {
+                name: item.name,
+                type: item.type,
+                id: item.id,
+            };
+            if ($scope.selected[mashup]) {
+                delete $scope.selected[mashup];
+            } else {
+                $scope.selected[mashup] = nitem;
             }
         };
 
@@ -365,16 +401,37 @@
                     Files.update({fileId: item.id}, update).$promise
                         .then(function(result) {
                             console.log('File deleted');
+
+                            for (var j = 0; j < $scope.folder.files.length; j++) {
+                                if ($scope.folder.files[j].id === item.id) {
+                                    $scope.folder.files.splice(j, 1);
+                                    break;
+                                }
+                            }
                         });
                 } else if (item.type === 'folder') {
                     Folders.update({folderId: item.id}, update).$promise
                         .then(function(result) {
                             console.log('Folder deleted');
+
+                             for (var j = 0; j < $scope.folder.folders.length; j++) {
+                                if ($scope.folder.folders[j].id === item.id) {
+                                    $scope.folder.folders.splice(j, 1);
+                                    break;
+                                }
+                            }
                         });
                 } else if (item.type === 'image') {
                     Images.update({imageId: item.id}, update).$promise
                         .then(function(result) {
                             console.log('Image deleted');
+
+                             for (var j = 0; j < $scope.folder.images.length; j++) {
+                                if ($scope.folder.images[j].id === item.id) {
+                                    $scope.folder.images.splice(j, 1);
+                                    break;
+                                }
+                            }
                         });
                 }
             }

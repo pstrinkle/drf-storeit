@@ -12,6 +12,21 @@
 
     <link rel="stylesheet" href="/bower_components/font-awesome/css/font-awesome.min.css">
 
+    <style>
+        input[type="checkbox"] + p {
+            border: white 2px solid;
+        }
+        input[type="checkbox"]:checked + p {
+            border: #337ab7 2px solid;
+        }
+
+        label:active, label:focus, div:active, div:focus {
+            outline: none;
+                 outline-style: none;
+            -moz-outline-style: none;
+        }
+    </style>
+
 </head>
 <body>
     <ui-view></ui-view>

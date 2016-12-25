@@ -4,55 +4,71 @@
         <h1><span ng-click="parent()" ng-show="hasParent">../</span>{{folder_name}} <small>Subtext for header</small></h1>
     </div>
 
-    <div>
-        <button type="button"
-                class="btn btn-link"
-                ng-click="loadNewFolder($event)"
-                style="text-decoration:none;">
-            <i class="fa fa-plus" aria-hidden="true"></i> Create Folder
-        </button>
+    <div class="btn-toolbar" role="toolbar">
+        <div class="btn-group" role="group">
+            <button class="btn btn-primary"
+                    ng-click="loadFolder(user.root)">
+                <i class="fa fa-folder-o" aria-hidden="true"></i> Root
+            </button>
+        </div>
+        <div class="btn-group" role="group">
+            <button class="btn btn-primary"
+                    ng-click="loadFolder(user.trash)">
+                <i class="fa fa-folder-o" aria-hidden="true"></i> Trash
+            </button>
+        </div>
 
-        <button type="button"
-                class="btn btn-link"
-                ngf-select="uploadImages($files)"
-                multiple="multiple"
-                id="imageupload"
-                style="text-decoration:none;">
-            <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload Image(s)
-        </button>
+        <div class="btn-group" role="group" ng-show="user.trash !== folder.id">
+            <button type="button"
+                    class="btn btn-link"
+                    ng-click="loadNewFolder($event)"
+                    style="text-decoration:none;">
+                <i class="fa fa-plus" aria-hidden="true"></i> Create Folder
+            </button>
+            <button type="button"
+                    class="btn btn-link"
+                    ngf-select="uploadImages($files)"
+                    multiple="multiple"
+                    id="imageupload"
+                    style="text-decoration:none;">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload Image(s)
+            </button>
+            <button type="button"
+                    class="btn btn-link"
+                    ngf-select="uploadFiles($files)"
+                    multiple="multiple"
+                    id="fileupload"
+                    style="text-decoration:none;">
+                <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload File(s)
+            </button>
+        </div>
 
-        <button type="button"
-                class="btn btn-link"
-                ngf-select="uploadFiles($files)"
-                multiple="multiple"
-                id="fileupload"
-                style="text-decoration:none;">
-            <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload File(s)
-        </button>
+        <div class="btn-group" role="group">
+            <button type="button"
+                    class="btn btn-link"
+                    ng-show="layout === 'table'"
+                    ng-click="changeLayout()">
+                <i class="fa fa-th-large" aria-hidden="true"></i>
+            </button>
+            <button type="button"
+                    class="btn btn-link"
+                    ng-show="layout === 'grid'"
+                    ng-click="changeLayout()">
+                <i class="fa fa-th-list" aria-hidden="true"></i>
+            </button>
+        </div>
 
-        <button type="button"
-                class="btn btn-link"
-                ng-show="layout === 'table'"
-                ng-click="changeLayout()">
-            <i class="fa fa-th-large" aria-hidden="true"></i>
-        </button>
-
-        <button type="button"
-                class="btn btn-link"
-                ng-show="layout === 'grid'"
-                ng-click="changeLayout()">
-            <i class="fa fa-th-list" aria-hidden="true"></i>
-        </button>
-
-        <button type="button"
-                class="btn btn-link"
-                ng-click="filesToTrash($event)"
-                style="text-decoration:none;">
-            <i class="fa fa-trash-o" aria-hidden="true"></i>
-        </button>
+        <div class="btn-group" role="group" ng-show="user.trash !== folder.id">
+            <button type="button"
+                    class="btn btn-link"
+                    ng-click="filesToTrash($event)"
+                    style="text-decoration:none;">
+                <i class="fa fa-trash-o" aria-hidden="true"></i>
+            </button>
+        </div>
     </div>
 
-    <div ng-if="layout === 'grid'">
+    <div ng-if="layout === 'grid'" ng-click="deselectAll($event)">
         <div ng-show="folder.folders.length > 0" class="row">
             <h4>Folders</h4>
             <button class="btn btn-primary"
@@ -65,19 +81,29 @@
         <div ng-show="folder.images.length > 0" class="row">
             <h4>Images</h4>
             <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left:10px;">
-                <p class="text-center">
-                    <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail"><br />
-                    <span ng-bind="image.name"></span>
-                </p>
+                <label ng-click="selectGrid($event, image, 'image')">
+                    <input type="checkbox"
+                           ng-checked="selected['image' + ',' + image.id]"
+                           style="display:none;" />
+                    <p class="text-center">
+                        <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail"><br />
+                        <span ng-bind="image.name"></span>
+                    </p>
+                </label>
             </div>
         </div>
         <div ng-show="folder.files.length > 0" class="row">
             <h4>Files</h4>
             <div ng-repeat="file in folder.files track by file.id" style="float:left; margin-left:10px;">
-                <p class="text-center">
-                    <i class="fa {{fileType(file.name)}} fa-5x"></i><br />
-                    <span ng-bind="file.name"></span>
-                </p>
+                <label ng-click="selectGrid($event, file, 'file')">
+                    <input type="checkbox"
+                           ng-checked="selected['file' + ',' + file.id]"
+                           style="display:none;" />
+                    <p class="text-center">
+                        <i class="fa {{fileType(file.name)}} fa-5x"></i><br />
+                        <span ng-bind="file.name"></span>
+                    </p>
+                </label>
             </div>
         </div>
     </div>
@@ -96,8 +122,6 @@
                     <td><!-- ng-click="selectItem($event, file.type, file.id)" -->
                         <label style="display: inline-block; width: 100%;">
                             <input type="checkbox"
-                                   name="delete"
-                                   id="delete"
                                    ng-checked="selected[file.type + ',' + file.id]"
                                    ng-click="selectItem($event, file)" />
                         </label>
