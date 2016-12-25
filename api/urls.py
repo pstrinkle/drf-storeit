@@ -20,10 +20,12 @@ from rest_framework_nested import routers as nrouters
 
 from drive_app.views import folder
 from drive_app.views import image
+from drive_app.views import miscfile
 from drive_app.views import user
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'user', user.UserViewSet, base_name='user')
+router.register(r'file', miscfile.FileViewSet, base_name='file')
 router.register(r'folder', folder.FolderViewSet, base_name='folder')
 router.register(r'image', image.ImageViewSet, base_name='image')
 

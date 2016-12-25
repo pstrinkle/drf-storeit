@@ -4,6 +4,41 @@ from rest_framework import serializers
 from drive_app.models import *
 
 
+class FileSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    RW File serializer.
+    """
+
+    owner = serializers.PrimaryKeyRelatedField(
+        queryset=apps.get_model('drive_app.DriveUser').objects.all(), required=False
+    )
+    folder = serializers.PrimaryKeyRelatedField(queryset=apps.get_model('drive_app.Folder').objects.all())
+
+    def validate_folder(self, value):
+        """
+        Verify you own this folder.
+        """
+
+        if value.owner.id != self.context['request'].user.id:
+            raise serializers.ValidationError("You must specify a Folder you own.")
+
+        return value
+
+    def create(self, validated_data):
+        validated_data['size'] = validated_data['file'].size
+        # Make it you can only create files into your own folders.
+        validated_data['owner'] = self.context['request'].user
+
+        img = MiscFile.objects.create(**validated_data)
+
+        return img
+
+    class Meta:
+        model = apps.get_model('drive_app.MiscFile')
+        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'name', 'updated')
+        read_only_fields = ('size', )
+
+
 class ImageSerializer(serializers.HyperlinkedModelSerializer):
     """
     RW Image serializer.
@@ -50,6 +85,16 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
         read_only_fields = ('size', )
 
 
+class FileSubSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    Sub-view serializer.
+    """
+
+    class Meta:
+        model = apps.get_model('drive_app.MiscFile')
+        fields = ('name', 'id', 'size', 'updated')
+
+
 class ImageSubSerializer(serializers.HyperlinkedModelSerializer):
     """
     Sub-view serializer.
@@ -89,6 +134,7 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
     """
 
     images = ImageSubSerializer(many=True, read_only=True)
+    files = FileSubSerializer(many=True, read_only=True)
     folders = FolderSubSerializer(many=True, read_only=True)
 
     owner = serializers.PrimaryKeyRelatedField(
@@ -122,7 +168,7 @@ class FolderSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Folder')
-        fields = ('added', 'owner', 'folder', 'name', 'images', 'folders', 'id', 'updated')
+        fields = ('added', 'owner', 'folder', 'name', 'images', 'files', 'folders', 'id', 'updated')
 
 
 class DriveUserSerializer(serializers.HyperlinkedModelSerializer):

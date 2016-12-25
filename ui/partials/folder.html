@@ -14,11 +14,20 @@
 
         <button type="button"
                 class="btn btn-link"
-                ngf-select="uploadFiles($files)"
+                ngf-select="uploadImages($files)"
                 multiple="multiple"
                 id="imageupload"
                 style="text-decoration:none;">
             <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload Image(s)
+        </button>
+
+        <button type="button"
+                class="btn btn-link"
+                ngf-select="uploadFiles($files)"
+                multiple="multiple"
+                id="fileupload"
+                style="text-decoration:none;">
+            <i class="fa fa-cloud-upload" aria-hidden="true"></i> Upload File(s)
         </button>
 
         <button type="button"
@@ -37,7 +46,7 @@
     </div>
 
     <div ng-if="layout === 'grid'">
-        <div ng-show="folder.folders.length > 0">
+        <div ng-show="folder.folders.length > 0" class="row">
             <h4>Folders</h4>
             <button class="btn btn-primary"
                     style="margin-left: 10px;"
@@ -46,12 +55,21 @@
                 <i class="fa fa-folder-o" aria-hidden="true"></i> {{folder.name}}
             </button>
         </div>
-        <div ng-show="folder.images.length > 0">
+        <div ng-show="folder.images.length > 0" class="row">
             <h4>Images</h4>
             <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left:10px;">
                 <p class="text-center">
                     <img ng-src="{{image.thumbnail}}" alt="{{image.name}}" class="img-thumbnail"><br />
                     <span ng-bind="image.name"></span>
+                </p>
+            </div>
+        </div>
+        <div ng-show="folder.files.length > 0" class="row">
+            <h4>Files</h4>
+            <div ng-repeat="file in folder.files track by file.id" style="float:left; margin-left:10px;">
+                <p class="text-center">
+                    <i class="fa {{fileType(file.name)}} fa-5x"></i><br />
+                    <span ng-bind="file.name"></span>
                 </p>
             </div>
         </div>
@@ -73,12 +91,15 @@
                     <td ng-if="file.type === 'image'">
                         <i class="fa fa-file-image-o" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>
+                    <td ng-if="file.type === 'file'">
+                        <i class="fa {{fileType(file.name)}}" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                    </td>
                     <td>
                         <span uib-tooltip="{{file.updated | amUtc | amLocal | amDateFormat:'lll'}}"
                               am-time-ago="file.updated"></span>
                     </td>
                     <td ng-if="file.type === 'folder'"></td>
-                    <td ng-if="file.type === 'image'">
+                    <td ng-if="file.type === 'image' || file.type === 'file'">
                         <span ng-bind="file.size | filesize"></span>
                     </td>
                 </tr>

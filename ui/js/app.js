@@ -1,6 +1,19 @@
 (function () {
     'use strict';
 
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/endsWith
+    if (!String.prototype.endsWith) {
+        String.prototype.endsWith = function(searchString, position) {
+            var subjectString = this.toString();
+            if (typeof position !== 'number' || !isFinite(position) || Math.floor(position) !== position || position > subjectString.length) {
+                position = subjectString.length;
+            }
+            position -= searchString.length;
+            var lastIndex = subjectString.lastIndexOf(searchString, position);
+            return lastIndex !== -1 && lastIndex === position;
+        };
+    }
+
     var StoreApp = angular.module('storeit_app', [
         'angularMoment',
         'ngAria',
@@ -26,7 +39,15 @@
         };
     });
 
-    StoreApp.factory('Folders', ['$resource', '$rootScope', function ($resource, $rootScope) {
+    StoreApp.factory('Files', ['$resource', '$rootScope', function ($resource, $rootScope) {
+        return $resource($rootScope.restUrl + 'file/:fileId', {}, {
+            options: {method: 'OPTIONS', params: {format: 'json'}},
+            update: {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json'}
+            },
+        });
+    }]).factory('Folders', ['$resource', '$rootScope', function ($resource, $rootScope) {
         return $resource($rootScope.restUrl + 'folder/:folderId', {}, {
             options: {method: 'OPTIONS', params: {format: 'json'}},
             update: {
@@ -205,8 +226,8 @@
     }]);
 
     StoreApp.controller('folderCtrl',
-                        ['$scope', '$state', '$uibModal', '$cookies', 'credentialsService', 'Folders', 'Images', 'Upload',
-                         function($scope, $state, $uibModal, $cookies, credentialsService, Folders, Images, Upload) {
+                        ['$scope', '$state', '$uibModal', '$cookies', 'credentialsService', 'Files', 'Folders', 'Images', 'Upload',
+                         function($scope, $state, $uibModal, $cookies, credentialsService, Files, Folders, Images, Upload) {
 
         $scope.folder_name = '';
         $scope.folder = {};
@@ -222,6 +243,41 @@
             $state.go('folder', {folderId: user.root});
             return;
         }
+
+        var uploadStuff = function(files, type) {
+            var url = '/api/v1/' + type;
+
+            if (files && files.length) {
+                for (var i = 0; i < files.length; i++) {
+                    var f = files[i];
+
+                    Upload.upload({
+                        url: url,
+                        data: {
+                            file: f,
+                            name: f.name,
+                            folder: $scope.folder.id,
+                        }
+                    }).then(function(resp) {
+                        var item = {
+                            name: resp.data.name,
+                            id: resp.data.id,
+                            updated: resp.data.updated,
+                            size: resp.data.size,
+                        };
+
+                        if (type === 'image') {
+                            item['thumbnail'] = resp.data.thumbnail;
+                            $scope.folder.images.push(item);
+                        } else {
+                            $scope.folder.files.push(item);
+                        }
+                    }, function(resp) {
+                        console.log('Error status: ' + resp.status);
+                    });
+                }
+            }
+        };
 
         function initialize() {
             var savedlayout = $cookies.get('layout');
@@ -245,7 +301,6 @@
         }
 
         initialize();
-        console.log('layout: ' + $scope.layout);
 
         $scope.loadNewFolder = function(event) {
             var modal = $uibModal.open({
@@ -288,33 +343,14 @@
             $state.go('folder', {folderId: $scope.folder.folder});
         };
 
-        $scope.uploadFiles = function(files) {
+        $scope.uploadImages = function(files) {
             $('#imageupload').blur();
+            uploadStuff(files, 'image');
+        };
 
-            if (files && files.length) {
-                for (var i = 0; i < files.length; i++) {
-                    var f = files[i];
-
-                    Upload.upload({
-                        url: '/api/v1/image',
-                        data: {
-                            file: f,
-                            name: f.name,
-                            folder: $scope.folder.id,
-                        }
-                    }).then(function(resp) {
-                        $scope.folder.images.push({
-                            name: resp.data.name,
-                            id: resp.data.id,
-                            thumbnail: resp.data.thumbnail,
-                            updated: resp.data.updated,
-                            size: resp.data.size,
-                        });
-                    }, function(resp) {
-                        console.log('Error status: ' + resp.status);
-                    });
-                }
-            }
+        $scope.uploadFiles = function(files) {
+            $('#fileupload').blur();
+            uploadStuff(files, 'file');
         };
 
         $scope.changeLayout = function() {
@@ -323,9 +359,32 @@
             $cookies.put('layout', $scope.layout);
         };
 
+        $scope.fileType = function(name) {
+            /* I should implement this file icon lookup as a  service or something. */
+
+            // fa-file-video-o
+            // fa-file-powerpoint-o
+            // fa-file-audio-o
+            // fa-file-excel-o
+            // fa-file-text-o
+
+            if (name.endsWith('.c') || name.endsWith('.py') || name.endsWith('.pl') || name.endsWith('.h')) {
+                return 'fa-file-code-o';
+            } else if (name.endsWith('.zip') || name.endsWith('.gz') || name.endsWith('.tgz') || name.endsWith('.bz2')) {
+                return 'fa-file-archive-o';
+            } else if (name.endsWith('.doc') || name.endsWith('.docx')) {
+                return 'fa-file-word-o';
+            } else if (name.endsWith('.pdf')) {
+                return 'fa-file-pdf-o';
+            } else {
+                return 'fa-file-o';
+            }
+        };
+
         $scope.condensed = function() {
             if ($scope.folder.condensed) {
-                if ($scope.folder.condensed.length === $scope.folder.folders.length + $scope.folder.images.length) {
+                var cnt = $scope.folder.folders.length + $scope.folder.images.length + $scope.folder.files.length;
+                if ($scope.folder.condensed.length === cnt) {
                     return $scope.folder.condensed;
                 }
 
@@ -346,6 +405,16 @@
                         updated: $scope.folder.images[i].updated,
                         size: $scope.folder.images[i].size,
                         type: 'image',
+                    });
+                }
+
+                for (var i = 0; i < $scope.folder.files.length; i++) {
+                    $scope.folder.condensed.push({
+                        name: $scope.folder.files[i].name,
+                        id: $scope.folder.files[i].id,
+                        updated: $scope.folder.files[i].updated,
+                        size: $scope.folder.files[i].size,
+                        type: 'file',
                     });
                 }
 
