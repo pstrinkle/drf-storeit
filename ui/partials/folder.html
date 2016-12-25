@@ -43,6 +43,13 @@
                 ng-click="changeLayout()">
             <i class="fa fa-th-list" aria-hidden="true"></i>
         </button>
+
+        <button type="button"
+                class="btn btn-link"
+                ng-click="filesToTrash($event)"
+                style="text-decoration:none;">
+            <i class="fa fa-trash-o" aria-hidden="true"></i>
+        </button>
     </div>
 
     <div ng-if="layout === 'grid'">

@@ -335,6 +335,10 @@
             });
         };
 
+        $scope.filesToTrash = function(event) {
+            event.target.blur();
+        };
+
         $scope.loadFolder = function(folderId) {
             $state.go('folder', {folderId: folderId});
         };
