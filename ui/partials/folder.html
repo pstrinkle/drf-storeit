@@ -85,6 +85,7 @@
         <table class="table table-hover">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Name</th>
                     <th>Updated</th><!-- a folder isn't updated when things are added to it (yet) -->
                     <th>Size</th>
@@ -92,6 +93,15 @@
             </thead>
             <tbody>
                 <tr ng-repeat="file in condensed()">
+                    <td><!-- ng-click="selectItem($event, file.type, file.id)" -->
+                        <label style="display: inline-block; width: 100%;">
+                            <input type="checkbox"
+                                   name="delete"
+                                   id="delete"
+                                   ng-checked="selected[file.type + ',' + file.id]"
+                                   ng-click="selectItem($event, file)" />
+                        </label>
+                    </td>
                     <td ng-if="file.type === 'folder'" ng-click="loadFolder(file.id)">
                         <i class="fa fa-folder" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>

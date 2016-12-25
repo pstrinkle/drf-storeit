@@ -233,13 +233,14 @@
         $scope.folder = {};
         $scope.hasParent = false;
         $scope.layout = 'grid';
+        $scope.selected = {};
+        var user = credentialsService.getUser();
 
         if ($state.params.folderId) {
             /* good. */
             console.log('folderId: ' + $state.params.folderId);
         } else {
             /* no folder specified; send them to their root. */
-            var user = credentialsService.getUser();
             $state.go('folder', {folderId: user.root});
             return;
         }
@@ -335,8 +336,48 @@
             });
         };
 
+        $scope.selectItem = function(event, item) {
+            var mashup = item.type + ',' + item.id;
+            if ($scope.selected[mashup]) {
+                delete $scope.selected[mashup];
+            } else {
+                $scope.selected[mashup] = item;
+            }
+        };
+
         $scope.filesToTrash = function(event) {
             event.target.blur();
+
+            var toTrash = Object.keys($scope.selected);
+            console.log('toTrash: ' + JSON.stringify(toTrash, null, 2));
+            var files = [];
+            var folders = [];
+            var images = [];
+            for (var i = 0; i < toTrash.length; i++) {
+                var item = $scope.selected[toTrash[i]];
+                var update = {
+                    owner: user.id,
+                    name: item.name,
+                    folder: user.trash
+                };
+
+                if (item.type === 'file') {
+                    Files.update({fileId: item.id}, update).$promise
+                        .then(function(result) {
+                            console.log('File deleted');
+                        });
+                } else if (item.type === 'folder') {
+                    Folders.update({folderId: item.id}, update).$promise
+                        .then(function(result) {
+                            console.log('Folder deleted');
+                        });
+                } else if (item.type === 'image') {
+                    Images.update({imageId: item.id}, update).$promise
+                        .then(function(result) {
+                            console.log('Image deleted');
+                        });
+                }
+            }
         };
 
         $scope.loadFolder = function(folderId) {

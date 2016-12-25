@@ -29,7 +29,6 @@ class Folder(models.Model):
 
     owner = models.ForeignKey('DriveUser', related_name='folders')
     folder = models.ForeignKey('Folder', blank=True, null=True, related_name='folders')
-
     name = SanitizedCharField(max_length=256, validators=[alphanumeric, minlength])
 
     class Meta:
@@ -52,8 +51,8 @@ class MiscFile(models.Model):
 
     owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='files')
     folder = models.ForeignKey('Folder', related_name='files')
-
     name = SanitizedCharField(max_length=256, validators=[minlength])
+
     size = models.IntegerField(default=0)
 
     file = models.FileField(upload_to=user_directory_path)
@@ -69,8 +68,8 @@ class Image(models.Model):
 
     owner = models.ForeignKey('DriveUser', blank=True, null=True, related_name='images')
     folder = models.ForeignKey('Folder', related_name='images')
-
     name = SanitizedCharField(max_length=256, validators=[minlength])
+
     size = models.IntegerField(default=0)
 
     # How we track stored images.
