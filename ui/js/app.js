@@ -252,6 +252,7 @@
         $scope.layout = 'grid';
         $scope.selected = {};
         $scope.path = [];
+        $scope.trashPath = false;
 
         console.log('loading folderCtrl');
 
@@ -302,6 +303,10 @@
 
                     if (result.id === user.root || result.id === user.trash) {
                         /* done. */
+                        if (result.id === user.trash) {
+                            $scope.trashPath = true;
+                        }
+
                         return;
                     }
 
@@ -357,6 +362,10 @@
                         }
 
                         pathTrace(result.folder);
+                    } else {
+                        if ($scope.path[0].id === user.trash) {
+                            $scope.trashPath = true;
+                        }
                     }
                 });
         }
@@ -565,7 +574,9 @@
         };
 
         $scope.parent = function() {
-            $state.go('folder', {folderId: $scope.folder.folder});
+            var len = $scope.path.length;
+            $scope.path.splice(len-1, 1);
+            $state.go('folder', {folderId: $scope.folder.folder, path: $scope.path});
         };
 
         $scope.uploadImages = function(files) {
@@ -583,6 +594,16 @@
             $scope.layout = ($scope.layout === 'grid') ? 'table' : 'grid';
             $cookies.put('layout', $scope.layout);
         };
+
+        $scope.nameOrIcon = function(name, id) {
+            if (id === user.root) {
+                return '<i class="fa fa-home" aria-hidden="true"></i>';
+            } else if (id === user.trash) {
+                return '<i class="fa fa-trash" aria-hidden="true"></i>';
+            } else {
+                return name;
+            }
+        }
 
         $scope.fileType = function(name) {
             /* I should implement this file icon lookup as a  service or something. */
