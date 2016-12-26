@@ -26,6 +26,19 @@
         'ui.router',
     ]);
 
+    //http://stackoverflow.com/questions/15731634/how-do-i-handle-right-click-events-in-angular-js
+    StoreApp.directive('ngRightClick', function($parse) {
+        return function(scope, element, attrs) {
+            var fn = $parse(attrs.ngRightClick);
+            element.bind('contextmenu', function(event) {
+                scope.$apply(function() {
+                    event.preventDefault();
+                    fn(scope, {$event:event});
+                });
+            });
+        };
+    });
+
     StoreApp.directive('autolowercase', function() {
         return {
             require: 'ngModel',
@@ -143,6 +156,9 @@
             url: '/folder/{folderId}',
             templateUrl: 'partials/folder.html',
             controller: 'folderCtrl',
+            params: {
+                path: [],
+            },
         });
 
         /* XXX: Deal with this later.
@@ -195,7 +211,8 @@
     }]);
 
     StoreApp.controller('loginCtrl',
-                        ['$scope', '$http', '$state', 'credentialsService', function($scope, $http, $state, credentialsService) {
+                        ['$scope', '$http', '$state', 'credentialsService',
+                         function($scope, $http, $state, credentialsService) {
 
         $scope.tryLogin = function() {
             var u = $scope.username;
@@ -234,17 +251,14 @@
         $scope.hasParent = false;
         $scope.layout = 'grid';
         $scope.selected = {};
+        $scope.path = [];
+
+        console.log('loading folderCtrl');
+
+        var buildPath = false;
+
         /* interestingly, I can access this from the UI without it being attachd to the $scope... */
         var user = credentialsService.getUser();
-
-        if ($state.params.folderId) {
-            /* good. */
-            console.log('folderId: ' + $state.params.folderId);
-        } else {
-            /* no folder specified; send them to their root. */
-            $state.go('folder', {folderId: user.root});
-            return;
-        }
 
         var uploadStuff = function(files, type) {
             var url = '/api/v1/' + type;
@@ -281,7 +295,42 @@
             }
         };
 
+        var pathTrace = function(parentId) {
+            Folders.get({folderId: parentId}).$promise
+                .then(function(result) {
+                    $scope.path.unshift({name: result.name, id: result.id});
+
+                    if (result.id === user.root || result.id === user.trash) {
+                        /* done. */
+                        return;
+                    }
+
+                    pathTrace(result.folder);
+                });
+        };
+
         function initialize() {
+            /* initialize method. */
+            if ($state.params.folderId) {
+                /* good. */
+                console.log('folderId: ' + $state.params.folderId);
+
+                if ($state.params.path.length > 0) {
+                    /* there was a path provided, let's assume it's correct and display it */
+                    angular.copy($state.params.path, $scope.path);
+
+                    console.log('path provided: ' + JSON.stringify($scope.path));
+                } else {
+                    /* The path was empty, we should build it. */
+                    console.log('no path provided');
+                    buildPath = true;
+                }
+            } else {
+                /* no folder specified; send them to their root. */
+                $state.go('folder', {folderId: user.root, path: []});
+                return;
+            }
+
             var savedlayout = $cookies.get('layout');
             console.log('layout cookie value: ' + savedlayout);
             if (savedlayout) {
@@ -291,13 +340,23 @@
 
             Folders.get({folderId: $state.params.folderId}).$promise
                 .then(function(result) {
-                    console.log('result: ' + JSON.stringify(result, null, 2));
+                    //console.log('result: ' + JSON.stringify(result, null, 2));
+
                     $scope.folder_name = result.name;
                     angular.copy(result, $scope.folder);
                     $scope.folder.condensed = [];
 
                     if ($scope.folder.folder) {
                         $scope.hasParent = true;
+                    }
+
+                    if (buildPath) {
+                        if (result.id === user.root || result.id === user.trash) {
+                            /* done. */
+                            return;
+                        }
+
+                        pathTrace(result.folder);
                     }
                 });
         }
@@ -322,7 +381,7 @@
             event.target.blur();
 
             modal.result.then(function success(result) {
-                console.log('result: ' + JSON.stringify(result, null, 2));
+                //console.log('result: ' + JSON.stringify(result, null, 2));
 
                 $scope.folder.folders.push({
                     name: result.name,
@@ -331,10 +390,14 @@
                 });
                 // new folder created.
             }, function dismissed(result) {
-                console.log('result: ' + result);
+                //console.log('result: ' + result);
                 console.log('modal dismissed.');
                 // new folder canceled
             });
+        };
+
+        $scope.loadEdit = function(event) {
+            console.log('right click caught!');
         };
 
         $scope.deselectAll = function(event) {
@@ -344,6 +407,10 @@
                 delete $scope.selected[items[i]];
             }
             console.log('deselected all');
+        };
+
+        $scope.selectedCnt = function() {
+            return Object.keys($scope.selected).length;
         };
 
         $scope.selectGrid = function(event, item, type) {
@@ -457,15 +524,44 @@
             });
 
             modal.result.then(function success(result) {
-                console.log('result: ' + JSON.stringify(result, null, 2));
+                //console.log('result: ' + JSON.stringify(result, null, 2));
             }, function dismissed(result) {
-                console.log('result: ' + result);
+                //console.log('result: ' + result);
                 console.log('modal dismissed.');
             });
         };
 
-        $scope.loadFolder = function(folderId) {
-            $state.go('folder', {folderId: folderId});
+        $scope.loadFolder = function(folderId, nav) {
+
+            if (folderId === user.root || folderId === user.trash) {
+                $state.go('folder', {folderId: folderId, path: []});
+                return;
+            }
+
+            // $scope.path
+            var path = [];
+            angular.copy($scope.path, path);
+
+            /* If the path selection is in the breadcrumbs, then we actually need to track down how much of the path
+             * to trim.
+             */
+
+            if (nav) {
+                for (var i = 0; i < path.length; i++) {
+                    if (folderId === path[i].id) {
+                        console.log('found breadcrumb clicked, trim this and all after');
+                        var remains = path.length - i;
+                        path.splice(i, remains);
+
+                        $state.go('folder', {folderId: folderId, path: path});
+                        return;
+                    }
+                }
+            }
+
+            path.push({name: $scope.folder.name, id: $scope.folder.id});
+
+            $state.go('folder', {folderId: folderId, path: path});
         };
 
         $scope.parent = function() {
@@ -562,7 +658,7 @@
         Images.get({imageId: data.id}).$promise
             .then(function(result) {
                 angular.copy(result, $scope.image);
-                console.log('result: ' + JSON.stringify(result, null, 2));
+                //console.log('result: ' + JSON.stringify(result, null, 2));
             });
     }]);
 
