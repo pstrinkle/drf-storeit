@@ -1,3 +1,4 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.metadata import SimpleMetadata
@@ -57,5 +58,23 @@ class FolderViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None, **kwargs):
+        """
+        """
+
+        queryset = self.get_queryset()
+        obj = get_object_or_404(queryset, pk=pk)
+
+        # don't let them change the owner.
+        data = request.data.copy()
+        data['owner'] = obj.owner.id
+
+        serializer = FolderSerializer(obj, data=data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
