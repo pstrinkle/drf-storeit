@@ -349,6 +349,7 @@
         $scope.selectGrid = function(event, item, type) {
             event.stopPropagation();
             event.preventDefault();
+            event.target.blur();
 
             // stopping this propogation doesn't work...
             var mashup = type + ',' + item.id;
@@ -435,6 +436,32 @@
                         });
                 }
             }
+        };
+
+        $scope.previewImage = function(event, image) {
+            event.target.blur();
+            event.stopPropagation();
+
+            var modal = $uibModal.open({
+                animation: true,
+                ariaLabelledBy: 'modal-title-top',
+                ariaDescribedBy: 'modal-body-top',
+                templateUrl: 'partials/preview.html',
+                size: 'lg',
+                controller: 'previewImageCtrl',
+                resolve: {
+                    data: function() {
+                        return image;
+                    },
+                },
+            });
+
+            modal.result.then(function success(result) {
+                console.log('result: ' + JSON.stringify(result, null, 2));
+            }, function dismissed(result) {
+                console.log('result: ' + result);
+                console.log('modal dismissed.');
+            });
         };
 
         $scope.loadFolder = function(folderId) {
@@ -526,6 +553,17 @@
 
             //angular.extend($scope.actions.data, data);
         };
+    }]);
+
+    StoreApp.controller('previewImageCtrl', ['$scope', '$uibModalInstance', 'Images', 'data',
+                                             function($scope, $uibModalInstance, Images, data) {
+        $scope.image = {};
+
+        Images.get({imageId: data.id}).$promise
+            .then(function(result) {
+                angular.copy(result, $scope.image);
+                console.log('result: ' + JSON.stringify(result, null, 2));
+            });
     }]);
 
     StoreApp.controller('createFolderCtrl', ['$scope', '$uibModalInstance', 'Folders', 'parentFolder',
