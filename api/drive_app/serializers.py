@@ -49,6 +49,11 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
     )
     folder = serializers.PrimaryKeyRelatedField(queryset=apps.get_model('drive_app.Folder').objects.all())
 
+    url = serializers.SerializerMethodField(read_only=True)
+
+    def get_url(self, obj):
+        return obj.file.url
+
     thumbnail = serializers.SerializerMethodField(read_only=True)
 
     def get_thumbnail(self, obj):
@@ -81,7 +86,7 @@ class ImageSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = apps.get_model('drive_app.Image')
-        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail', 'name', 'updated')
+        fields = ('size', 'added', 'owner', 'folder', 'file', 'id', 'thumbnail', 'name', 'updated', 'url')
         read_only_fields = ('size', )
 
 

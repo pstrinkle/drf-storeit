@@ -1,4 +1,6 @@
 
+<ui-view></ui-view>
+
 <div class="container">
     <div class="page-header">
         <h1><span ng-click="parent()" ng-show="hasParent">../</span>{{folder_name}} <small>Subtext for header</small></h1>
@@ -6,14 +8,18 @@
 
     <div class="btn-toolbar" role="toolbar">
         <div class="btn-group" role="group">
-            <button class="btn btn-primary"
-                    ng-click="loadFolder(user.root)">
+            <button class="btn btn-info"
+                    uib-tooltip="double click"
+                    ng-click="$event.target.blur()"
+                    ng-dblclick="loadFolder(user.root)">
                 <i class="fa fa-folder-o" aria-hidden="true"></i> Root
             </button>
         </div>
         <div class="btn-group" role="group">
-            <button class="btn btn-primary"
-                    ng-click="loadFolder(user.trash)">
+            <button class="btn btn-info"
+                    uib-tooltip="double click"
+                    ng-click="$event.target.blur()"
+                    ng-dblclick="loadFolder(user.trash)">
                 <i class="fa fa-folder-o" aria-hidden="true"></i> Trash
             </button>
         </div>
@@ -71,17 +77,18 @@
     <div ng-if="layout === 'grid'" ng-click="deselectAll($event)">
         <div ng-show="folder.folders.length > 0" class="row">
             <h4>Folders</h4>
-            <button class="btn btn-primary"
+            <button class="btn btn-{{selected['folder' + ',' + folder.id]? 'primary': 'default'}}"
                     style="margin-left: 10px;"
                     ng-repeat="folder in folder.folders track by folder.id"
-                    ng-click="loadFolder(folder.id)">
+                    ng-click="selectGrid($event, folder, 'folder')"
+                    ng-dblclick="loadFolder(folder.id)">
                 <i class="fa fa-folder-o" aria-hidden="true"></i> {{folder.name}}
             </button>
         </div>
         <div ng-show="folder.images.length > 0" class="row">
             <h4>Images</h4>
             <div ng-repeat="image in folder.images track by image.id" style="float:left; margin-left:10px;">
-                <label ng-click="selectGrid($event, image, 'image')">
+                <label ng-click="selectGrid($event, image, 'image')" ng-dblclick="previewImage($event, image)">
                     <input type="checkbox"
                            ng-checked="selected['image' + ',' + image.id]"
                            style="display:none;" />
@@ -126,10 +133,10 @@
                                    ng-click="selectItem($event, file)" />
                         </label>
                     </td>
-                    <td ng-if="file.type === 'folder'" ng-click="loadFolder(file.id)">
-                        <i class="fa fa-folder" aria-hidden="true"></i> <span ng-bind="file.name"></span>
+                    <td ng-if="file.type === 'folder'" ng-dblclick="loadFolder(file.id)">
+                        <i class="fa fa-folder" style="color:#337ab7;" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>
-                    <td ng-if="file.type === 'image'">
+                    <td ng-if="file.type === 'image'" ng-dblclick="previewImage($event, file)">
                         <i class="fa fa-file-image-o" aria-hidden="true"></i> <span ng-bind="file.name"></span>
                     </td>
                     <td ng-if="file.type === 'file'">
