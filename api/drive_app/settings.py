@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 
 import os
 import sys
+import datetime
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -41,7 +42,8 @@ INSTALLED_APPS = [
 #SITE_ID = 1
 
 REST_KNOX = {
-  'USER_SERIALIZER': 'drive_app.serializers.LoginUserSerializer',
+    'TOKEN_TTL': datetime.timedelta(days=2),
+    'USER_SERIALIZER': 'drive_app.serializers.LoginUserSerializer',
 }
 
 MIDDLEWARE = [
@@ -178,6 +180,4 @@ else:
     # MEDIA_ROOT is used for saving incoming media.
     # for production use.
     MEDIA_ROOT = '/media'
-
-
 

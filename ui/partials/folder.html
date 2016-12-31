@@ -8,7 +8,7 @@
         </h1>
         <ol class="breadcrumb">
             <li ng-repeat="folder in path">
-                <a ng-dblclick="loadFolder(folder.id, true)">
+                <a ng-dblclick="loadFolder(folder.id, true)" class="crumbs">
                     <span ng-bind-html="nameOrIcon(folder.name, folder.id)"></span>
                 </a>
             </li>
